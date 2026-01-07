@@ -2,6 +2,7 @@
 __pycache__/
 backend/venv/
 .env
+create_user.py
 
 # Python (ml_service)
 __pycache__/
