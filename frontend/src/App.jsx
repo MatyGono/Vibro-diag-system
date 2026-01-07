@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import './App.css'
 
 function App() {
   const [data, setData] = useState([])
@@ -10,6 +11,7 @@ function App() {
   // Data pro graf
   const fetchData = async () => {
     try {
+      setDiagnosis(null)
       const response = await axios.get('http://127.0.0.1:8000/history?limit=50')
       setData(response.data.reverse())
     } catch (error) {
@@ -46,88 +48,89 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '20px', backgroundColor: '#ffffffff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
-      <h1>Vibrodiagnostický Dashboard</h1>
-      
-      <div style={{ marginBottom: '20px' }}>
-        <button onClick={fetchData} style={{ marginRight: '10px', padding: '10px 20px' }}>Aktualizovat data</button>
-        
-        <button 
-          onClick={runDiagnosis} 
-          disabled={loading}
-          style={{ 
-            padding: '10px 20px', 
-            backgroundColor: '#007bff', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          {loading ? 'Analyzuji...' : 'Spustit AI Diagnostiku'}
-        </button>
-      </div>
+    <div className="app-container">
+      <header className="header-section">
+        <h1>Vibrodiagnostický Dashboard</h1>
+        <div className="button-group">
+          <button className="btn-update" onClick={fetchData}>Aktualizovat data</button>
+          <button 
+            className="btn-diagnose" 
+            onClick={runDiagnosis} 
+            disabled={loading}
+          >
+            {loading ? 'Analyzuji...' : 'Spustit AI Diagnostiku'}
+          </button>
+        </div>
+      </header>
 
       {/* PANEL DIAGNOSTIKY */}
       {diagnosis && (
-        <div style={{ 
-          padding: '20px', 
-          marginBottom: '20px', 
-          borderRadius: '8px', 
-          color: 'white',
-          backgroundColor: diagnosis.label === 1 ? '#d9534f' : '#5cb85c',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
+        <div className={`diag-panel ${diagnosis.label === 1 ? 'status-fault' : 'status-ok'}`}>
           <h2 style={{ margin: 0 }}>Stav stroje: {diagnosis.status}</h2>
-          <p style={{ margin: '5px 0 0 0' }}>
+          <p style={{ margin: '8px 0 0 0', opacity: 0.9 }}>
             Jistota modelu: {(diagnosis.confidence * 100).toFixed(1)}% | 
-            Parametry: RMS={data[data.length-1].rms_raw.toFixed(2)}, 
-            Kurt={data[data.length-1].kurtosis.toFixed(2)}
+            Poslední RMS: {data[data.length-1]?.rms_raw?.toFixed(2)} mm/s
           </p>
         </div>
       )}
 
       {/* SEKCE S GRAFEM */}
-      <div style={{ width: '100%', height: 400, backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '40px' }}>
-        <h3>Trend RMS Vibrací</h3>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="time" 
-              tickFormatter={(timeStr) => new Date(timeStr).toLocaleTimeString()} 
-            />
-            <YAxis label={{ value: 'RMS [mm/s]', angle: -90, position: 'insideLeft' }} />
-            <Tooltip labelFormatter={(label) => new Date(label).toLocaleString()} />
-            <Legend />
-            <Line type="monotone" dataKey="rms_raw" stroke="#8884d8" strokeWidth={2} dot={false} name="RMS Raw" />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="chart-container">
+        <h3 style={{marginTop: 0}}>Trend Vibrací (Real-time)</h3>
+        <div style={{ width: '100%', height: 350 }}>
+          <ResponsiveContainer>
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+              <XAxis 
+                dataKey="time" 
+                tickFormatter={(t) => new Date(t).toLocaleTimeString()} 
+                stroke="#64748b"
+              />
+              <YAxis stroke="#64748b" />
+              <Tooltip 
+                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                labelFormatter={(t) => new Date(t).toLocaleString()} 
+              />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="rms_raw" 
+                stroke="#487BE3" 
+                strokeWidth={4} 
+                dot={{r: 0}}
+                activeDot={{ r: 6, stroke: '#F99244', strokeWidth: 2 }}
+                name="RMS [mm/s]" 
+                animationDuration={1000}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      {/* TABULKA POD GRAFEM */}
-      <h3>Detailní hodnoty</h3>
-      <table border="1" style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#eee' }}>
-            <th>Čas</th>
-            <th>RMS Raw</th>
-            <th>Peak Raw</th>
-            <th>Kurtosis</th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* V tabulce chceme vidět posledních 10 (otočíme zpět pro tabulku) */}
-          {[...data].reverse().slice(0, 20).map((row, index) => (
-            <tr key={index}>
-              <td>{new Date(row.time).toLocaleString()}</td>
-              <td>{row.rms_raw?.toFixed(3)}</td>
-              <td>{row.peak_raw?.toFixed(3)}</td>
-              <td>{row.kurtosis?.toFixed(3)}</td>
+      {/* TABULKA */}
+      <h3>Detailní log měření</h3>
+      <div className="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Čas</th>
+              <th>RMS [mm/s]</th>
+              <th>Peak [g]</th>
+              <th>Kurtosis [-]</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {[...data].reverse().slice(0, 15).map((row, index) => (
+              <tr key={index}>
+                <td>{new Date(row.time).toLocaleString()}</td>
+                <td><strong>{row.rms_raw?.toFixed(3)}</strong></td>
+                <td>{row.peak_raw?.toFixed(3)}</td>
+                <td>{row.kurtosis?.toFixed(3)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

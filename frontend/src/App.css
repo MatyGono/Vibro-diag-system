@@ -1,0 +1,152 @@
+/* App.css */
+:root {
+  /* Paleta od tebe */
+  --vut-red: #FF4041;
+  --br-orange-dark: #FF6A4C;
+  --br-orange: #F99244;
+  --br-yellow: #FAAB33;
+  --blue-primary: #487BE3;
+  --blue-dark: #2D55CC;
+
+  /* Funkční mapování */
+  --primary: var(--br-orange);
+  --primary-hover: var(--br-orange-dark);
+  --secondary: var(--vut-red);
+  --accent: var(--blue-primary);
+  
+  --bg: #fdfdfd;
+  --card-bg: #ffffff;
+  --text: #2d2d2d;
+}
+
+.app-container {
+  padding: 2rem;
+  background-color: var(--bg);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  color: var(--br-orange);
+  border-left: 5px solid var(--br-orange);
+  padding-left: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+}
+
+button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #ddd;
+}
+
+.btn-update {
+  background: white;
+  border: 2px solid var(--br-orange);
+  color: var(--br-orange);
+}
+
+.btn-update:hover {
+  background: var(--br-orange);
+  color: white;
+}
+
+.btn-diagnose {
+  background: var(--blue-primary);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 14px 0 rgba(72, 123, 227, 0.39);
+}
+
+.btn-diagnose:hover:not(:disabled) {
+  background: var(--blue-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(45, 85, 204, 0.23);
+}
+
+.btn-diagnose:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Panel diagnostiky */
+.diag-panel {
+  padding: 1.5rem;
+  border-radius: 12px;
+  color: white;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+.diag-panel.status-ok {
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+}
+.diag-panel.status-fault {
+  background: linear-gradient(90deg, var(--vut-red) 0%, #b91c1c 100%);
+}
+
+/* Graf */
+.chart-container {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2.5rem;
+}
+
+/* Tabulka */
+.table-wrapper {
+  background: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.table-wrapper th {
+  background: var(--br-orange);
+  color: white;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #f1f5f9;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+td {
+  padding: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+tr:hover {
+  background-color: #fff7f5;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
