@@ -4,13 +4,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 function App() {
   const [data, setData] = useState([])
+  const [diagnosis, setDiagnosis] = useState(null);
+  const [loading, setLoading] = useState(false);
 
+  // Data pro graf
   const fetchData = async () => {
     try {
-      // Taháme víc dat, aby graf vypadal jako graf (např. 50 bodů)
       const response = await axios.get('http://127.0.0.1:8000/history?limit=50')
-      // Recharts potřebuje data v chronologickém pořadí (od nejstaršího po nejnovější)
-      // Naše API vrací nejnovější první, tak to otočíme pomocí .reverse()
       setData(response.data.reverse())
     } catch (error) {
       console.error("Chyba při načítání dat:", error)
@@ -18,16 +18,74 @@ function App() {
   }
 
   useEffect(() => {
-    fetchData()
+    fetchData();
   }, [])
 
+  // Funkce diagnostiky
+  const runDiagnosis = async () => {
+    if (data.length == 0) return;
+    setLoading(true);
+    const latest=data[data.length-1];
+    try {
+      console.log("Posílám k analýze:", {
+        rms: latest.rms_raw,
+        kurtosis: latest.kurtosis,
+        ptp: latest.peak_raw
+      });
+      const response = await axios.post('http://127.0.0.1:8001/predict', {
+        rms: latest.rms_raw,
+        kurtosis: latest.kurtosis,
+        ptp: latest.peak_raw
+      });
+      setDiagnosis(response.data);
+    } catch (error) {
+      console.error("Diagnostika selhala:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div style={{ padding: '20px', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
+    <div style={{ padding: '20px', backgroundColor: '#ffffffff', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       <h1>Vibrodiagnostický Dashboard</h1>
       
-      <button onClick={fetchData} style={{ marginBottom: '20px', padding: '10px 20px', cursor: 'pointer' }}>
-        Aktualizovat data
-      </button>
+      <div style={{ marginBottom: '20px' }}>
+        <button onClick={fetchData} style={{ marginRight: '10px', padding: '10px 20px' }}>Aktualizovat data</button>
+        
+        <button 
+          onClick={runDiagnosis} 
+          disabled={loading}
+          style={{ 
+            padding: '10px 20px', 
+            backgroundColor: '#007bff', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          {loading ? 'Analyzuji...' : 'Spustit AI Diagnostiku'}
+        </button>
+      </div>
+
+      {/* PANEL DIAGNOSTIKY */}
+      {diagnosis && (
+        <div style={{ 
+          padding: '20px', 
+          marginBottom: '20px', 
+          borderRadius: '8px', 
+          color: 'white',
+          backgroundColor: diagnosis.label === 1 ? '#d9534f' : '#5cb85c',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ margin: 0 }}>Stav stroje: {diagnosis.status}</h2>
+          <p style={{ margin: '5px 0 0 0' }}>
+            Jistota modelu: {(diagnosis.confidence * 100).toFixed(1)}% | 
+            Parametry: RMS={data[data.length-1].rms_raw.toFixed(2)}, 
+            Kurt={data[data.length-1].kurtosis.toFixed(2)}
+          </p>
+        </div>
+      )}
 
       {/* SEKCE S GRAFEM */}
       <div style={{ width: '100%', height: 400, backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', marginBottom: '40px' }}>
