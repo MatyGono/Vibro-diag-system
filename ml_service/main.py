@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
@@ -11,6 +12,14 @@ class VibrationData(BaseModel):
     ptp: float
 
 app = FastAPI(title="Machine Learning Service")
+# Nastaveni middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],    
+)
 
 # Načtení natrénovaného modelu hned při startu
 model = joblib.load('models/mafaulda_model.joblib')
