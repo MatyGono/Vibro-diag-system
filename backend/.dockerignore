@@ -1,0 +1,17 @@
+# Ignoruj lokální virtuální prostředí
+venv/
+.venv/
+env/
+
+# Ignoruj mezipaměť a kompilované soubory
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignoruj soubor s hesly (bezpečnost!)
+.env
+
+# Ignoruj Git historii
+.git/
+.gitignore

@@ -1,19 +1,17 @@
+
 services:
-  # Timescale (PostgreSQL) databáze
   db:
     image: timescale/timescaledb:latest-pg15
     container_name: vibro_db
     restart: always
-    environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=vibro_diag
+    env_file:  # <--- TOTO JE NOVÉ
+      - .env
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      
   # Správa databáze pgadmin
+  # (Zůstává beze změny)
   pgadmin:
     image: dpage/pgadmin4
     container_name: vibro_pgadmin
@@ -28,6 +26,44 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
+  # --- NOVÉ SLUŽBY (Backend, ML, Frontend) ---
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: vibro_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:  # <--- TOTO JE NOVÉ (nahradí sekci environment)
+      - .env
+    depends_on:
+      - db
+
+  # ML Service
+  ml_service:
+    build: ./ml_service
+    container_name: vibro_ml
+    restart: always
+    ports:
+      - "8001:8001"
+    # ML service nepotřebuje environment variables, jen běží
+
+  # Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # React při buildu potřebuje vědět, kde bude backend (z pohledu prohlížeče uživatele)
+        VITE_API_URL: http://localhost:8000
+    container_name: vibro_frontend
+    restart: always
+    ports:
+      - "80:80" # Aplikace poběží na http://localhost
+    depends_on:
+      - backend
+
+# Definice Volumes (zůstávají stejné, aby se zachovala data)
 volumes:
   db_data:
   pgadmin_data:

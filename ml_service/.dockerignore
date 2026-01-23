@@ -1,0 +1,17 @@
+# Ignoruj lokální virtuální prostředí
+venv/
+.venv/
+env/
+
+# Ignoruj trénovací data (pro běh API nejsou třeba)
+data/
+
+# Ignoruj mezipaměť Pythonu
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignoruj Git historii (pokud tam je)
+.git/
+.gitignore

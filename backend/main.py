@@ -544,7 +544,9 @@ def run_machine_diagnostics(machine_id: int, token: str = Depends(oauth2_scheme)
         }
 
         # 2. Volání ML Service
-        ml_service_url = "http://127.0.0.1:8001/predict"
+        #ml_service_url = "http://127.0.0.1:8001/predict"
+        base_ml_url = os.getenv("ML_SERVICE_URL", "http://127.0.0.1:8001")
+        ml_service_url = f"{base_ml_url}/predict"
         
         try:
             print(f"Odesílám do ML: {ml_payload}") # Debug log
