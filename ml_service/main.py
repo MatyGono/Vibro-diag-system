@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from typing import List
 import numpy as np
 import pandas as pd
-import io, base64, pywt
+import io, base64, pywt, os
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
@@ -29,7 +29,7 @@ WAVELET = 'cmor1.5-1.0'
 FRAME_SIZE = 1024
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-BACKEND_URL = "http://127.0.0.1:8000" 
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 encoders = []
 decoders = []

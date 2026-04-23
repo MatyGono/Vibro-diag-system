@@ -1,33 +1,61 @@
 services:
-  # Timescale (PostgreSQL) databáze
   db:
-    image: timescale/timescaledb:latest-pg15
+    image: postgres:15-alpine
     container_name: vibro_db
-    restart: always
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=vibro_diag
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: tvuj_heslo  # Změň podle toho, co má backend v kódu!
+      POSTGRES_DB: vibro_diag_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Magie databáze: Při prvním startu vezme init.sql a vytvoří tabulky
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      
-  # Správa databáze pgadmin
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: vibro_pgadmin
-    restart: always
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
-    ports:
-      - "8080:80"
+
+  backend:
+    build: ./backend
+    container_name: vibro_backend
     depends_on:
       - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:tvuj_heslo@db:5432/vibro_diag_db
+      - ML_SERVICE_URL=http://ml_service:8001 # Adresujeme interně názvem kontejneru!
+    ports:
+      - "8000:8000"
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      # Tady mapujeme fyzickou složku s RAW daty na disku na cestu uvnitř kontejneru
+      - /C/VibroData:/app/raw_data
+
+  ml_service:
+    build: ./ml_service
+    container_name: vibro_ml
+    environment:
+      - BACKEND_URL=http://backend:8000 # Aby webhook věděl, kam zavolat zpět
+    ports:
+      - "8001:8001"
+    volumes:
+      # 1. RAW DATA (musí být na chlup stejná cesta jako u backendu, aby si soubory předaly)
+      - /C/VibroData:/app/raw_data
+      # 2. MODELY (Named Volume pro ukládání verzí)
+      - ml_models_data:/app/models
+    # deploy sekce umožní využít GPU (pokud na tom PC je a je nastavený nvidia-container-toolkit)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  frontend:
+    build: ./frontend
+    container_name: vibro_frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
 
 volumes:
-  db_data:
-  pgadmin_data:
+  postgres_data:
+  ml_models_data: # Tento volume udrží natrénované váhy naživu
