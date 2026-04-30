@@ -100,6 +100,9 @@ def get_history(limit: int = 100):
 
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    Přihlášení uživatele. Ověříme jméno a heslo, aktualizujeme last_login a vrátíme JWT token s rolí.
+    """
     with engine.connect() as conn:
         # 1. Ujisti se, že id_user je PRVNÍ (index 0)
         query = text("SELECT id_user, username, hashed_password, role FROM users WHERE username = :user")
@@ -1565,7 +1568,7 @@ def training_webhook(model_id: int, payload: WebhookPayload):
 @app.post("/models/sync-active")
 def sync_active_models():
     """
-    Tento endpoint volá ML servisa při startu.
+    Tento endpoint volá ML service při startu.
     Najde nejnovější 'ready' verze, aktivuje je a vrátí jejich cesty.
     """
     active_paths = {}
@@ -1638,7 +1641,7 @@ def activate_model_version(model_id: int):
 @app.put("/models/{model_id}/activate")
 def activate_model_version(model_id: int, token: str = Depends(oauth2_scheme)):
     """
-    Aktivuje verzi v DB a nařídí ML Servise její okamžité načtení.
+    Aktivuje verzi v DB a nařídí ML Service její okamžité načtení.
     """
     with engine.connect() as conn:
         # 1. Najdeme jméno modelu
@@ -1653,24 +1656,25 @@ def activate_model_version(model_id: int, token: str = Depends(oauth2_scheme)):
         conn.execute(text("UPDATE ml_models SET is_active = True WHERE id_model = :mid"), {"mid": model_id})
         conn.commit()
         
-        print(f"✅ Model ID {model_id} ({model_name}) aktivován v databázi.")
+        print(f"Model ID {model_id} ({model_name}) aktivován v databázi.")
 
     # 3. NOTIFIKACE ML SERVISY (Klíčový krok)
     try:
-        print(f"📡 Posílám signál k přenačtení na ML Servisu ({ML_SERVICE_URL}/reload)...")
+        print(f"Posílám signál k přenačtení na ML Servisu ({ML_SERVICE_URL}/reload)...")
         # Voláme endpoint, který jsme vytvořili v kroku 1
         reload_res = requests.post(f"{ML_SERVICE_URL}/reload", timeout=10)
         reload_res.raise_for_status()
-        print("🚀 ML Servisa potvrdila úspěšné přenačtení modelů.")
+        print("ML Servisa potvrdila úspěšné přenačtení modelů.")
         
     except Exception as e:
         # Pokud ML servisa neběží, nevadí to pro DB, ale uživatel by měl dostat varování
-        print(f"⚠️ Varování: Nepodařilo se aktualizovat běžící ML servisu: {e}")
+        print(f"Varování: Nepodařilo se aktualizovat běžící ML servisu: {e}")
         return {
             "status": "partial_success", 
             "message": "Model aktivován v DB, ale ML servisa neodpovídá. Změna se projeví po jejím restartu."
         }
 
     return {"status": "success", "message": "Model byl úspěšně nasazen do produkce."}
+
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

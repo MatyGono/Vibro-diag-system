@@ -61,9 +61,9 @@ tensorboard-data-server==0.7.2
 tensorflow==2.20.0
 termcolor==3.3.0
 threadpoolctl==3.6.0
-torch==2.6.0+cu124
-torchaudio==2.6.0+cu124
-torchvision==0.21.0+cu124
+torch==2.6.0
+torchaudio==2.6.0
+torchvision==0.21.0
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 tzdata==2025.3
