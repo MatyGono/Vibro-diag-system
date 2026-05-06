@@ -1,33 +1,70 @@
 services:
-  # Timescale (PostgreSQL) databáze
   db:
-    image: timescale/timescaledb:latest-pg15
+    image: postgres:15-alpine
     container_name: vibro_db
     restart: always
+    # Docker Compose si tyto proměnné sám vytáhne z tvého centrálního .env souboru
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=vibro_diag
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Magie databáze: Při prvním startu vezme init.sql a vytvoří tabulky
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      
-  # Správa databáze pgadmin
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: vibro_pgadmin
     restart: always
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
+      PGADMIN_DEFAULT_EMAIL: admin@vibro.cz
+      PGADMIN_DEFAULT_PASSWORD: root
     ports:
-      - "8080:80"
+      - "5050:80"  # pgAdmin poběží na adrese http://localhost:5050
     depends_on:
       - db
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      # Namapujeme složku projektu přímo do pgadmina pro snadný import/export init.sql záloh
+      - .:/var/lib/pgadmin/storage/admin_at_vibro.cz/backup
+
+  backend:
+    build: ./backend
+    container_name: vibro_backend
+    depends_on:
+      - db
+    # Kontejner dostane přístup ke všem proměnným v centrálním .env
+    env_file: 
+      - .env
+    environment:
+      - TZ=Europe/Prague
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+
+  ml_service:
+    build: ./ml_service
+    container_name: vibro_ml
+    # Kontejner dostane přístup ke všem proměnným v centrálním .env
+    env_file: 
+      - .env
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./data:/app/data
+      - ml_models_data:/app/models
+
+  frontend:
+    build: ./frontend
+    container_name: vibro_frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
 
 volumes:
-  db_data:
-  pgadmin_data:
+  postgres_data:
+  ml_models_data:
