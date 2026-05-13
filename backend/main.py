@@ -120,7 +120,7 @@ def get_history(limit: int = 100):
 def start_scheduler():
     scheduler = AsyncIOScheduler()
     # Návrat k produkčnímu plánu: Každé 4 hodiny (02:00, 06:00, 10:00, 14:00, 18:00, 22:00)
-    scheduler.add_job(download_and_process_raw_data, 'cron', hour='2,6,10,14,18,22', minute=28)
+    scheduler.add_job(download_and_process_raw_data, 'cron', hour='2,6,10,13,14,15,18,22', minute='15,45')
     scheduler.start()
     print("Scheduler spuštěn v produkčním 4h režimu.")
 
