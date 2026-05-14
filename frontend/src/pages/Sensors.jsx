@@ -50,7 +50,7 @@ function Sensors() {
     if (payload.id_machine === '') payload.id_machine = null;
 
     try {
-      await axios.post('http://127.0.0.1:8000/sensors', payload);
+      await axios.post('/sensors', payload);
       setIsAddModalOpen(false);
       setNewSensor({ 
         serial_number: '', description: '', sampling_rate: '', 
@@ -69,7 +69,7 @@ function Sensors() {
     if (payload.id_machine === '' || payload.id_machine === 'null') payload.id_machine = null;
 
     try {
-      await axios.put(`http://127.0.0.1:8000/sensors/${editingSensor.id_sensor}`, payload);
+      await axios.put(`/sensors/${editingSensor.id_sensor}`, payload);
       setEditingSensor(null);
       setSelectedSensor(null);
       fetchData();
@@ -80,7 +80,7 @@ function Sensors() {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/sensors/${sensorToDelete}`);
+      await axios.delete(`/sensors/${sensorToDelete}`);
       setSensorToDelete(null);
       fetchData();
     } catch (error) {

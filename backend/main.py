@@ -225,6 +225,8 @@ async def download_and_process_raw_data():
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
+            ctx.minimum_version = ssl.TLSVersion.TLSv1
+            ctx.maximum_version = ssl.TLSVersion.TLSv1_2
             try:
                 ctx.set_ciphers('ALL:@SECLEVEL=0')
             except:
@@ -1020,10 +1022,16 @@ async def test_machine_connection(machine_id: int, type: str, payload: dict, rol
                 ctx.check_hostname = False
                 ctx.verify_mode = ssl.CERT_NONE
                 ctx.minimum_version = ssl.TLSVersion.TLSv1
+                ctx.maximum_version = ssl.TLSVersion.TLSv1_2
+                try:
+                    ctx.set_ciphers('ALL:@SECLEVEL=0')
+                except:
+                    pass
                 # Timeout 3 sekundy
                 ftp = FTP_TLS(context=ctx, timeout=3.0) 
                 ftp.connect(host, 21)
                 ftp.login(user, pwd)
+                ftp.prot_p()
                 ftp.quit()
             
             await asyncio.to_thread(try_ftp)
