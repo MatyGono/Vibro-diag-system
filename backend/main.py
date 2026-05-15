@@ -192,7 +192,7 @@ async def download_and_process_raw_data():
                     current_work_id = f"{work_id_prefix}_CH{channel}"
                     await node_workid.write_value(ua.DataValue(ua.Variant(current_work_id, ua.VariantType.String)))
                     # U B&R bývá datový typ pro tyto indexy standardně UINT (což je v OPC UA UInt16)
-                    await node_bufnum.write_value(ua.DataValue(ua.Variant(buffer_number, ua.VariantType.UInt16)))
+                    await node_bufnum.write_value(ua.DataValue(ua.Variant(buffer_number, ua.VariantType.Byte)))
                     
                     # 2. SPUŠTĚNÍ (START)
                     await node_start.write_value(ua.DataValue(ua.Variant(True, ua.VariantType.Boolean)))
