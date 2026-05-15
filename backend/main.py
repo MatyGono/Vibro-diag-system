@@ -175,7 +175,7 @@ async def download_and_process_raw_data():
                 # Načtení všech uzlů, jak jsi je definoval
                 node_workid  = client.get_node("ns=6;s=::AsGlobalPV:gTrace.BufferUpload.WorkID")
                 node_buflen  = client.get_node("ns=6;s=::AsGlobalPV:gTrace.BufferUpload.BufferLength")
-                node_bufnum  = client.get_node("ns=6;s=::AsGlobalPV:gTrace.BufferNumber") # TVŮJ NOVÝ UZEL
+                node_bufnum  = client.get_node("ns=6;s=::AsGlobalPV:gTrace.BufferUpload.BufferNumber")
                 node_start   = client.get_node("ns=6;s=::AsGlobalPV:gTrace.BufferUpload.Start")
                 node_done    = client.get_node("ns=6;s=::AsGlobalPV:gTrace.BufferStatus.Done")
                 node_csv     = client.get_node("ns=6;s=::AsGlobalPV:gTrace.BufferStatus.CSVFileName")
